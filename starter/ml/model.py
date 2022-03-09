@@ -1,3 +1,6 @@
+import numpy as np
+import pandas as pd
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import fbeta_score, precision_score, recall_score
 
 
@@ -18,7 +21,9 @@ def train_model(X_train, y_train):
         Trained machine learning model.
     """
 
-    pass
+    clf = LogisticRegression(random_state=0).fit(X_train, y_train)
+
+    return clf
 
 
 def compute_model_metrics(y, preds):
@@ -43,12 +48,69 @@ def compute_model_metrics(y, preds):
     return precision, recall, fbeta
 
 
-def inference(model, X):
-    """ Run model inferences and return the predictions.
+def _compute_slice_metrics(y, preds, feature_col):
+    """
+    Iterate through unique values for feature, calling compute model metrics.
+
+    Inputs
+    -----
+    y : pd.Series
+    preds : pd.Series
+    feature_col : pd.Series
+
+    Returns
+    -----
+    pd.DataFrame
+    """
+    df = pd.concat([feature_col, y, preds], axis=1)
+    ret_df = pd.DataFrame([], columns=["class", "sample-size", "precision", "recall", "fbeta"])
+    for val in df[feature_col.name].unique():
+        df_val = df[df[feature_col.name] == val]
+        precision, recall, fbeta = compute_model_metrics(
+            df_val[y.name].values, df_val[preds.name].values
+        )
+        ret_df = ret_df.append(
+            {
+                "class": f"{feature_col.name}.{val}",
+                "sample-size": len(df_val),
+                "proportion-positive-class": df_val[y.name].sum() / len(df_val),
+                "precision": precision,
+                "recall": recall,
+                "fbeta": fbeta,
+            },
+            ignore_index=True,
+        )
+    return ret_df
+
+
+def compute_all_slice_metrics(X, y, preds):
+    """
+    Iterate through features, calculating metrics using _compute_slice_metrics
 
     Inputs
     ------
-    model : ???
+    X : pd.DataFrame
+    y : pd.Series
+    preds : pd.Series
+    cat_features : List[str]
+
+    Returns
+    -----
+    pd.DataFrame
+    """
+    metric_frames = []
+    for feature in X.columns:
+        metric_frames.append(_compute_slice_metrics(y, preds, X[feature]))
+
+    return pd.concat(metric_frames, ignore_index=True)
+
+
+def inference(model, X):
+    """Run model inferences and return the predictions.
+
+    Inputs
+    ------
+    model : LogisticRegression
         Trained machine learning model.
     X : np.array
         Data used for prediction.
@@ -57,4 +119,6 @@ def inference(model, X):
     preds : np.array
         Predictions from the model.
     """
-    pass
+    preds = model.predict(X)
+
+    return preds
