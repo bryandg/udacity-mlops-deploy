@@ -45,7 +45,7 @@ app = FastAPI()
 
 @app.get("/")
 async def welcome():
-    return {"Welcome, this API has an endpoint for model inference."}
+    return {"Welcome": "This API has an endpoint for model inference."}
 
 
 @app.post("/inference/")
