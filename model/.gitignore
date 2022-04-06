@@ -1,2 +1,4 @@
 
 /model.joblib
+/lb.joblib
+/encoder.joblib

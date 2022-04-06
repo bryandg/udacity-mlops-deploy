@@ -39,6 +39,8 @@ X_test, y_test, encoder_ret, lb_ret = process_data(
 
 # Train and save a model.
 model = mo.train_model(X_train, y_train)
+dump(encoder, "../model/encoder.joblib")
+dump(lb, "../model/lb.joblib")
 dump(model, "../model/model.joblib")
 
 # make predictions
