@@ -47,6 +47,9 @@ dump(model, "../model/model.joblib")
 preds = mo.inference(model, X_test)
 # TODO: compute and store metrics
 
+precision, recall, fbeta = mo.compute_model_metrics(y_test, preds)
+print(f"precision: {precision}, recall: {recall}, fbeta: {fbeta}")
+
 slice_df = mo.compute_all_slice_metrics(
     test[cat_features].reset_index(drop=True),
     pd.Series(y_test, name="y").reset_index(drop=True),
