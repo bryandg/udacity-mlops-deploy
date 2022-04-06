@@ -1,0 +1,4 @@
+outs:
+- md5: 83464bd306a94f51f3ab3504def9f9aa
+  size: 7640
+  path: slice_metrics.csv
