@@ -1,4 +1,5 @@
 from typing import Union
+import subprocess
 
 import pandas as pd
 from fastapi import FastAPI
@@ -51,6 +52,9 @@ async def welcome():
 @app.post("/inference/")
 async def predict(data: InputData):
     data = pd.DataFrame(data.dict(), index=[0])
+
+    # ensure that model, lb and encoder are available
+    subprocess.run(["dvc", "pull"])
 
     lb = load("model/lb.joblib")
     encoder = load("model/encoder.joblib")
