@@ -9,7 +9,6 @@ from pydantic import BaseModel, Field
 from starter.ml.data import process_data
 from starter.ml.model import inference
 
-
 if "DYNO" in os.environ and os.path.isdir(".dvc"):
     os.system("dvc config core.no_scm true")
     if os.system("dvc pull") != 0:
@@ -17,34 +16,62 @@ if "DYNO" in os.environ and os.path.isdir(".dvc"):
     os.system("rm -r .dvc .apt/usr/lib/dvc")
 
 
+def to_hyphens(string: str) -> str:
+    return string.replace("_", "-")
+
+
 class InputData(BaseModel):
     age: int
     workclass: str
     fnlgt: int
     education: str
-    education_num: int = Field(alias="education-num")
-    marital_status: str = Field(alias="marital-status")
+    education_num: int
+    marital_status: str
     occupation: str
     relationship: str
     race: str
     sex: str
-    capital_gain: int = Field(alias="capital-gain")
-    capital_loss: int = Field(alias="capital-loss")
-    hours_per_week: int = Field(alias="hours-per-week")
-    native_country: str = Field(alias="native-country")
+    capital_gain: int
+    capital_loss: int
+    hours_per_week: int
+    native_country: str
     # potentially make salary an optional field
     salary: str
+
+    class Config:
+
+        alias_generator = to_hyphens
+
+        schema_extra = {
+            "example": {
+                "age": 49,
+                "workclass": "State-gov",
+                "fnlgt": 77516,
+                "education": "Bachelors",
+                "education-num": 13,
+                "marital-status": "Never-married",
+                "occupation": "Adm-clerical",
+                "relationship": "Not-in-family",
+                "race": "Asian-Pac-Islander",
+                "sex": "Female",
+                "capital-gain": 2174,
+                "capital-loss": 0,
+                "hours-per-week": 40,
+                "native-country": "United States",
+                "salary": "<=50K",
+            }
+        }
 
 
 CAT_FEATURES = [
     "workclass",
     "education",
-    "marital_status",
+    "marital-status",
     "occupation",
     "relationship",
     "race",
     "sex",
-    "native_country",
+    "native-country",
 ]
 
 
@@ -58,7 +85,7 @@ async def welcome():
 
 @app.post("/inference/")
 async def predict(data: InputData):
-    data = pd.DataFrame(data.dict(), index=[0])
+    data = pd.DataFrame(data.dict(by_alias=True), index=[0])
 
     lb = load("model/lb.joblib")
     encoder = load("model/encoder.joblib")
